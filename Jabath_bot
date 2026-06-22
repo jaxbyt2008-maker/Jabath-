@@ -1,0 +1,94 @@
+"""
+jabath_bot - A feature-rich Telegram bot
+Built with python-telegram-bot library
+
+Features:
+- Echo messages
+- Weather information
+- Reminders/scheduling
+- Image processing
+- Fun commands
+"""
+
+import logging
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    MessageHandler,
+    filters,
+    ContextTypes,
+)
+from config import BOT_TOKEN, FEATURES
+from handlers import (
+    start_command,
+    help_command,
+    hello_command,
+    weather_command,
+    echo_command,
+    joke_command,
+    about_command,
+    contact_command,
+    remind_command,
+    handle_message,
+    handle_photo,
+    error_handler,
+)
+
+# Set up logging
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
+
+
+def main():
+    """Start the bot"""
+    print("🤖 Starting jabath_bot...")
+    
+    # Create the Application
+    application = Application.builder().token(BOT_TOKEN).build()
+    
+    # Add command handlers
+    if FEATURES.get("commands", True):
+        application.add_handler(CommandHandler("start", start_command))
+        application.add_handler(CommandHandler("help", help_command))
+        application.add_handler(CommandHandler("hello", hello_command))
+        application.add_handler(CommandHandler("about", about_command))
+        application.add_handler(CommandHandler("contact", contact_command))
+        application.add_handler(CommandHandler("joke", joke_command))
+    
+    # Add weather handler
+    if FEATURES.get("weather", True):
+        application.add_handler(CommandHandler("weather", weather_command))
+    
+    # Add echo handler
+    if FEATURES.get("echo", True):
+        application.add_handler(CommandHandler("echo", echo_command))
+    
+    # Add reminder handler
+    if FEATURES.get("reminders", True):
+        application.add_handler(CommandHandler("remind", remind_command))
+    
+    # Add image processing handler
+    if FEATURES.get("image_processing", True):
+        application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
+    
+    # Add message handler for echo feature
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    
+    # Add error handler
+    application.add_error_handler(error_handler)
+    
+    # Start the Bot
+    print("✅ Bot is running! Press Ctrl+C to stop.")
+    application.run_polling(allowed_updates=["message", "edited_channel_post"])
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n❌ Bot stopped by user")
+    except Exception as e:
+        print(f"❌ Error: {e}")
